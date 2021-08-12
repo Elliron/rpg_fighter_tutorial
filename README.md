@@ -21,3 +21,6 @@
 
 ### Sixth
 - https://coderslegacy.com/python/pygame-rpg-movement-animations/
+
+### Seventh
+- https://coderslegacy.com/python/pygame-rpg-attack-animations/
