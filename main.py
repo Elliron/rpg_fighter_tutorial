@@ -10,7 +10,7 @@ vec = pygame.math.Vector2
 WIN_HEIGHT = 350
 WIN_WIDTH = 700
 ACC = 0.3
-FRIC = -10
+FRIC = -0.10
 FPS = 60
 FPS_CLOCK = pygame.time.Clock()
 COUNT = 0
@@ -49,41 +49,47 @@ class Player(pygame.sprite.Sprite):
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.direction = "RIGHT"
-        self.SPEED = 3
+        # tracks state of player if jumping or not
+        self.jumping = False
 
     def move(self):
-        # will set running to false if the player has slowed down to a certain extent
-        # checks if the player is running, player will move forward even after taking hand off button
+        # keep constant acc of 0.5 in the downwards direction (gravity)
+        self.acc = vec(0, 0.5)
         if abs(self.vel.x) > 0.3:
             self.running = True
         else:
             self.running = False
 
-        # gets keeys that are pressed
         pressed_keys = pygame.key.get_pressed()
-        # accelerates player in direction of key press
         if pressed_keys[K_LEFT]:
-            self.pos.x += -ACC
+            self.acc.x = -ACC
         if pressed_keys[K_RIGHT]:
-            self.pos.x += ACC
+            self.acc.x = ACC
 
-        # Physics, equations of motion
-        # acceleration calculated bassed off velocity and friction, position updated based off distance covered which is calculated based off acc and vel
         self.acc.x += self.vel.x * FRIC
         self.vel += self.acc
-        # self.pos updates position with new values
         self.pos += self.vel + 0.5 * self.acc
 
-        # warp character from one spot to another
         if self.pos.x > WIN_WIDTH:
             self.pos.x = 0
         if self.pos.x < 0:
             self.pos.x = WIN_WIDTH
-        # updates rec with new position
         self.rect.midbottom = self.pos
 
 
-        
+    def gravity_check(self):
+        # spritecollide takes 3 parameters, sprite being tested, sprite group to be tested against, and whether it kills the sprite or not
+        # can check collisions against hundreds of sprites in a single function
+        hits = pygame.sprite.spritecollide(player, ground_group, False)
+        # checks to see if the character has vel in a downwards direcetion, if not he is on the ground and not falling
+        if self.vel.y > 0:
+            # if hits records a collision between player and ground
+            if hits:
+                lowest = hits[0]
+                if self.pos.y < lowest.rect.bottom:
+                    self.pos.y = lowest.rect.top + 1
+                    self.vel.y = 0
+                    self.jumping = False
     
     def update(self):
         pass
@@ -92,7 +98,16 @@ class Player(pygame.sprite.Sprite):
         pass
 
     def jump(self):
-        pass
+        self.rect.x += 1
+        # check to see if player is touching ground
+        hits = pygame.sprite.spritecollide(self, ground_group, False)
+
+        self.rect.x -= 1
+        
+        # if touching ground and not jumping cause player to jump
+        if hits and not self.jumping:
+            self.jumping = True
+            self.vel.y = -12
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -100,9 +115,14 @@ class Enemy(pygame.sprite.Sprite):
 
 background = Background()
 ground = Ground()
+# creates a sprite group for collisions
+ground_group = pygame.sprite.Group()
+# adds ground to the sprite group
+ground_group.add(ground)
 player = Player()
 
 while True:
+    player.gravity_check()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -112,11 +132,11 @@ while True:
             pass
 
         if event.type == pygame.KEYDOWN:
-            pass
+            if event.key == pygame.K_SPACE:
+                player.jump()
     
     background.render()
     ground.render()
-    # call player movement
     player.move()
 
     displaysurface.blit(player.image, player.rect)
