@@ -1,4 +1,4 @@
-import pygame, sys, random
+import pygame, sys, random, math
 from pygame.locals import *
 # from tkinter import filedialog
 # from tkinter import *
@@ -14,7 +14,6 @@ FRIC = -0.10
 FPS = 60
 FPS_CLOCK = pygame.time.Clock()
 COUNT = 0
-# /Users/glennclark/projects/personal/rpg_fighter_tutorial/rpg_fighter_tutorial/resources/img/Attack_Animations
 displaysurface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Glenns RPG Fighter Game Practice")
 
@@ -28,9 +27,6 @@ run_ani_L = [pygame.image.load("resources/img/Movement_Animations/Player_Sprite_
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite5_L.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite6_L.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite_L.png")]
 
-# some attack frames were repeated to better smooth out the image
-# game is 60 frames per second, single attack ends in 1/6 of a second.  15 - 20 animations make a fluid attack
-# Attack animation for the RIGHT
 attack_ani_R = [pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png"), pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png"),
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack2_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack2_R.png"),
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack3_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack3_R.png"),
@@ -38,7 +34,6 @@ attack_ani_R = [pygame.image.load("resources/img/Attack_Animations/Player_Attack
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack5_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack5_R.png"),
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png")]
  
-# Attack animation for the LEFT
 attack_ani_L = [pygame.image.load("resources/img/Attack_Animations/Player_Attack_L.png"), pygame.image.load("resources/img/Attack_Animations/Player_Attack_L.png"),
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack2_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack2_L.png"),
                 pygame.image.load("resources/img/Attack_Animations/Player_Attack3_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack3_L.png"),
@@ -78,7 +73,6 @@ class Player(pygame.sprite.Sprite):
         self.jumping = False
         self.running = False
         self.move_frame = 0
-        # Combat, state check and frame check for player
         self.attacking = False
         self.attack_frame = 0
 
@@ -141,8 +135,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = run_ani_L[self.move_frame]
 
     def correction(self):
-        # Function is used to correct an error
-        # with character position on left attack frames
         if self.attack_frame == 1:
             self.pos.x -= 20
         if self.attack_frame == 10:
@@ -150,19 +142,16 @@ class Player(pygame.sprite.Sprite):
 
 
     def attack(self):
-        # if dictionary reaches end of images restart at beginning
         if self.attack_frame > 10:
             self.attack_frame = 0
             self.attacking = False
 
-        # check direcction of animation display
         if self.direction == "RIGHT":
             self.image = attack_ani_R[self.attack_frame]
         elif self.direction == "LEFT":
             self.correction()
             self.image = attack_ani_L[self.attack_frame]
 
-        # update current attack frame
         self.attack_frame += 1
 
     def jump(self):
@@ -178,11 +167,46 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        # load image and retrieve rect of the image size, creates 2 vectors for position and velocity
+        self.image = pygame.image.load("resources/img/Enemy.png")
+        self.rect = self.image.get_rect()
+        self.pos = vec(0,0)
+        self.vel = vec(0,0)
+        # more dynamic enemy
+        self.direction = random.randint(0,1) # 0 for Right, 1 for left
+        self.vel.x = random.randint(2,6) / 2 # randomized velocity of enemy
+        # sets inital starting position of enemies
+        if self.direction == 0:
+            self.pos.x = 0
+            self.pos.y = 235
+        if self.direction == 1:
+            self.pos.x = 700
+            self.pos.y = 235
+    
+    def move(self):
+        # cause enemy to change directions upon reaching the end of screen
+        if self.pos.x >= (WIN_WIDTH - 20):
+            self.direction = 1
+        elif self.pos.x <= 0:
+            self.direction = 0
+
+        # updates position with values
+        if self.direction == 0:
+            self.pos.x += self.vel.x
+        if self.direction == 1:
+            self.pos.x -= self.vel.x
+        
+        self.rect.center = self.pos # Updates rec
+
+    def render(self):
+        # display enemy on screen
+        displaysurface.blit(self.image, (self.pos.x, self.pos.y))
 
 background = Background()
 ground = Ground()
 ground_group = pygame.sprite.Group()
 ground_group.add(ground)
+enemy = Enemy()
 player = Player()
 Playergroup = pygame.sprite.Group()
 
@@ -203,7 +227,6 @@ while True:
             if event.key == pygame.K_RETURN:
                 if player.attacking == False:
                     player.attack()
-                    # player cant attack a second time until the first attack ends
                     player.attacking = True
     
     background.render()
@@ -214,6 +237,8 @@ while True:
     player.move()
 
     displaysurface.blit(player.image, player.rect)
+    enemy.render()
+    enemy.move()
 
     pygame.display.update()
     FPS_CLOCK.tick(FPS)
