@@ -24,3 +24,7 @@
 
 ### Seventh
 - https://coderslegacy.com/python/pygame-rpg-attack-animations/
+
+### Eigth
+- https://coderslegacy.com/python/pygame-rpg-enemy/
+
