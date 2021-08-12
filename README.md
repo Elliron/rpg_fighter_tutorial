@@ -12,3 +12,6 @@
 
 - Third
 - https://coderslegacy.com/python/pygame-rpg-player-class/
+
+- Fourth
+- https://coderslegacy.com/python/pygame-rpg-player-movement/

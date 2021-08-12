@@ -2,7 +2,7 @@ import pygame, sys, random
 from pygame.locals import *
 # from tkinter import filedialog
 # from tkinter import *
-from config import *
+# from config import *
 
 pygame.init()
 
@@ -41,25 +41,49 @@ class Ground(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        # load character image
         self.image = pygame.image.load("resources/img/Player_Sprite_R.png")
-        # create interactable rectangle the size of character image
         self.rect = self.image.get_rect()
 
-        # Position and direction
         self.vx = 0
-        # use vector object created in first tutorial, 2 components, accessed in format self.pos.x and self.pos.y
-        # self.pos = player position
         self.pos = vec((340, 240))
-        # self.vel = player velocity
         self.vel = vec(0,0)
-        # self.acc = player acceleration
         self.acc = vec(0,0)
-        # current direction player is facing
         self.direction = "RIGHT"
+        self.SPEED = 3
 
     def move(self):
-        pass
+        # will set running to false if the player has slowed down to a certain extent
+        # checks if the player is running, player will move forward even after taking hand off button
+        if abs(self.vel.x) > 0.3:
+            self.running = True
+        else:
+            self.running = False
+
+        # gets keeys that are pressed
+        pressed_keys = pygame.key.get_pressed()
+        # accelerates player in direction of key press
+        if pressed_keys[K_LEFT]:
+            self.pos.x += -ACC
+        if pressed_keys[K_RIGHT]:
+            self.pos.x += ACC
+
+        # Physics, equations of motion
+        # acceleration calculated bassed off velocity and friction, position updated based off distance covered which is calculated based off acc and vel
+        self.acc.x += self.vel.x * FRIC
+        self.vel += self.acc
+        # self.pos updates position with new values
+        self.pos += self.vel + 0.5 * self.acc
+
+        # warp character from one spot to another
+        if self.pos.x > WIN_WIDTH:
+            self.pos.x = 0
+        if self.pos.x < 0:
+            self.pos.x = WIN_WIDTH
+        # updates rec with new position
+        self.rect.midbottom = self.pos
+
+
+        
     
     def update(self):
         pass
@@ -92,8 +116,11 @@ while True:
     
     background.render()
     ground.render()
-    # doesnt need to use render, playey.rect supplies coordinates for character
+    # call player movement
+    player.move()
+
     displaysurface.blit(player.image, player.rect)
 
     pygame.display.update()
     FPS_CLOCK.tick(FPS)
+
