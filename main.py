@@ -1,41 +1,49 @@
 import pygame, sys, random
 from pygame.locals import *
-# tkinter is used for creating new windows
 # from tkinter import filedialog
 # from tkinter import *
 from config import *
 
-# initialize pygame
 pygame.init()
 
-# Declare variables in program, this will go in config
 vec = pygame.math.Vector2
-# window height and width
 WIN_HEIGHT = 350
 WIN_WIDTH = 700
-# acceleration and friction for creating physics in game
 ACC = 0.3
 FRIC = -10
-# frames per second, how many times the game loop runs in a single second
 FPS = 60
-# clock object when used with FPS limits game loop to 60 frames per second
 FPS_CLOCK = pygame.time.Clock()
-# not sure what count is for  yet
 COUNT = 0
 
-# creates display for game surface
 displaysurface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-# changes window title from default to the new title
 pygame.display.set_caption("Glenns RPG Fighter Game Practice")
+
+
 
 # main game classes
 class Background(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        # background image to be used
+        self.bgimage = pygame.image.load("resources/img/Background.png")
+        # used later for scrolling background
+        self.bgY = 0
+        self.bgX = 0
+
+    # display background on pygame window
+    def render(self):
+        displaysurface.blit(self.bgimage, (self.bgX, self.bgY))
 
 class Ground(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        # ground image to be used
+        self.image = pygame.image.load("resources/img/Ground.png")
+        # rectangle drawn around the image to make it interactable
+        self.rect = self.image.get_rect(center = (350, 350))
+    # draws image on the screen
+    def render(self):
+        displaysurface.blit(self.image, (self.rect.x, self.rect.y))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -45,18 +53,26 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
+# create objects for classes
+background = Background()
+ground = Ground()
 
 while True:
     for event in pygame.event.get():
-        # will run when the close window button is clicked
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
-        # for events that occur upon clicking the left mouse button
         if event.type == pygame.MOUSEBUTTONDOWN:
             pass
 
-        # event handling for a range of different key presses
         if event.type == pygame.KEYDOWN:
             pass
+    
+    # draw images onto screen, order matters
+    background.render()
+    ground.render()
+
+    # pygame updates and runs FPS at 60
+    pygame.display.update()
+    FPS_CLOCK.tick(FPS)
