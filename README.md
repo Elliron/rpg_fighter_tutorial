@@ -9,3 +9,6 @@
 
 - Second Branch
 - https://coderslegacy.com/python/pygame-rpg-world-building/
+
+- Third
+- https://coderslegacy.com/python/pygame-rpg-player-class/

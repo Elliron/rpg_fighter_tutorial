@@ -20,42 +20,63 @@ pygame.display.set_caption("Glenns RPG Fighter Game Practice")
 
 
 
-# main game classes
 class Background(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        # background image to be used
         self.bgimage = pygame.image.load("resources/img/Background.png")
-        # used later for scrolling background
         self.bgY = 0
         self.bgX = 0
 
-    # display background on pygame window
     def render(self):
         displaysurface.blit(self.bgimage, (self.bgX, self.bgY))
 
 class Ground(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        # ground image to be used
         self.image = pygame.image.load("resources/img/Ground.png")
-        # rectangle drawn around the image to make it interactable
         self.rect = self.image.get_rect(center = (350, 350))
-    # draws image on the screen
     def render(self):
         displaysurface.blit(self.image, (self.rect.x, self.rect.y))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        # load character image
+        self.image = pygame.image.load("resources/img/Player_Sprite_R.png")
+        # create interactable rectangle the size of character image
+        self.rect = self.image.get_rect()
+
+        # Position and direction
+        self.vx = 0
+        # use vector object created in first tutorial, 2 components, accessed in format self.pos.x and self.pos.y
+        # self.pos = player position
+        self.pos = vec((340, 240))
+        # self.vel = player velocity
+        self.vel = vec(0,0)
+        # self.acc = player acceleration
+        self.acc = vec(0,0)
+        # current direction player is facing
+        self.direction = "RIGHT"
+
+    def move(self):
+        pass
+    
+    def update(self):
+        pass
+
+    def attack(self):
+        pass
+
+    def jump(self):
+        pass
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-# create objects for classes
 background = Background()
 ground = Ground()
+player = Player()
 
 while True:
     for event in pygame.event.get():
@@ -69,10 +90,10 @@ while True:
         if event.type == pygame.KEYDOWN:
             pass
     
-    # draw images onto screen, order matters
     background.render()
     ground.render()
+    # doesnt need to use render, playey.rect supplies coordinates for character
+    displaysurface.blit(player.image, player.rect)
 
-    # pygame updates and runs FPS at 60
     pygame.display.update()
     FPS_CLOCK.tick(FPS)
