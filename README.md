@@ -18,3 +18,6 @@
 
 - Fifth
 - https://coderslegacy.com/python/pygame-rpg-gravity-jumping/
+
+### Sixth
+- https://coderslegacy.com/python/pygame-rpg-movement-animations/
