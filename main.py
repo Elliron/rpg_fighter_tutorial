@@ -18,7 +18,18 @@ COUNT = 0
 displaysurface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Glenns RPG Fighter Game Practice")
 
+# might put in player class but tutorial said not to, outside of class it is global
+# Run animation for the RIGHT
+run_ani_R = [pygame.image.load("resources/img/Movement_Animations/Player_Sprite_R.png"), pygame.image.load("resources/img/Movement_Animations/Player_Sprite2_R.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite3_R.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite4_R.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite5_R.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite6_R.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite_R.png")]
 
+# Run animation for the LEFT
+run_ani_L = [pygame.image.load("resources/img/Movement_Animations/Player_Sprite_L.png"), pygame.image.load("resources/img/Movement_Animations/Player_Sprite2_L.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite3_L.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite4_L.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite5_L.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite6_L.png"),
+            pygame.image.load("resources/img/Movement_Animations/Player_Sprite_L.png")]
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -49,11 +60,13 @@ class Player(pygame.sprite.Sprite):
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.direction = "RIGHT"
-        # tracks state of player if jumping or not
         self.jumping = False
+        # standing and running, can add third mode of walking
+        self.running = False
+        # current frame of character being displayed
+        self.move_frame = 0
 
     def move(self):
-        # keep constant acc of 0.5 in the downwards direction (gravity)
         self.acc = vec(0, 0.5)
         if abs(self.vel.x) > 0.3:
             self.running = True
@@ -77,13 +90,12 @@ class Player(pygame.sprite.Sprite):
         self.rect.midbottom = self.pos
 
 
+
+
+
     def gravity_check(self):
-        # spritecollide takes 3 parameters, sprite being tested, sprite group to be tested against, and whether it kills the sprite or not
-        # can check collisions against hundreds of sprites in a single function
         hits = pygame.sprite.spritecollide(player, ground_group, False)
-        # checks to see if the character has vel in a downwards direcetion, if not he is on the ground and not falling
         if self.vel.y > 0:
-            # if hits records a collision between player and ground
             if hits:
                 lowest = hits[0]
                 if self.pos.y < lowest.rect.bottom:
@@ -92,19 +104,43 @@ class Player(pygame.sprite.Sprite):
                     self.jumping = False
     
     def update(self):
-        pass
+        # return base frame if at end of movement sequence, resets frame to 0 if it reaches 6, we hve 7 frames starting at index 0
+        # more frames look smoother
+        if self.move_frame > 6:
+            self.move_frame = 0
+            return
+
+        # move character to next frame if conditions are met, animations
+        # checks to make sure characters arent jumping or standing still, only uses animations if character is moving
+        if self.jumping == False and self.running == True:
+            # direction player is moving
+            if self.vel.x > 0:
+                # image updating from animation dic
+                self.image = run_ani_R[self.move_frame]
+                # sets direction variable
+                self.direction = "RIGHT"
+            elif self.vel.x < 0:
+                self.image = run_ani_L[self.move_frame]
+                self.direction = "LEFT"
+            self.move_frame += 1
+
+        # returns to the base frame if standing still and incorrect frame is showing
+        if abs(self.vel.x) < 0.2 and self.move_frame != 0:
+            self.move_frame = 0
+            if self.direction == "RIGHT":
+                self.image = run_ani_R[self.move_frame]
+            elif self.direction == "LEFT":
+                self.image = run_ani_L[self.move_frame]
 
     def attack(self):
         pass
 
     def jump(self):
         self.rect.x += 1
-        # check to see if player is touching ground
         hits = pygame.sprite.spritecollide(self, ground_group, False)
 
         self.rect.x -= 1
         
-        # if touching ground and not jumping cause player to jump
         if hits and not self.jumping:
             self.jumping = True
             self.vel.y = -12
@@ -115,11 +151,10 @@ class Enemy(pygame.sprite.Sprite):
 
 background = Background()
 ground = Ground()
-# creates a sprite group for collisions
 ground_group = pygame.sprite.Group()
-# adds ground to the sprite group
 ground_group.add(ground)
 player = Player()
+Playergroup = pygame.sprite.Group()
 
 while True:
     player.gravity_check()
@@ -137,6 +172,7 @@ while True:
     
     background.render()
     ground.render()
+    player.update()
     player.move()
 
     displaysurface.blit(player.image, player.rect)
