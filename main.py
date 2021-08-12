@@ -1,8 +1,8 @@
 import pygame, sys, random
 from pygame.locals import *
 # tkinter is used for creating new windows
-from tkinter import filedialog
-from tkinter import *
+# from tkinter import filedialog
+# from tkinter import *
 from config import *
 
 # initialize pygame
