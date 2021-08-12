@@ -14,22 +14,37 @@ FRIC = -0.10
 FPS = 60
 FPS_CLOCK = pygame.time.Clock()
 COUNT = 0
-
+# /Users/glennclark/projects/personal/rpg_fighter_tutorial/rpg_fighter_tutorial/resources/img/Attack_Animations
 displaysurface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Glenns RPG Fighter Game Practice")
 
-# might put in player class but tutorial said not to, outside of class it is global
-# Run animation for the RIGHT
 run_ani_R = [pygame.image.load("resources/img/Movement_Animations/Player_Sprite_R.png"), pygame.image.load("resources/img/Movement_Animations/Player_Sprite2_R.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite3_R.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite4_R.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite5_R.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite6_R.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite_R.png")]
 
-# Run animation for the LEFT
 run_ani_L = [pygame.image.load("resources/img/Movement_Animations/Player_Sprite_L.png"), pygame.image.load("resources/img/Movement_Animations/Player_Sprite2_L.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite3_L.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite4_L.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite5_L.png"),pygame.image.load("resources/img/Movement_Animations/Player_Sprite6_L.png"),
             pygame.image.load("resources/img/Movement_Animations/Player_Sprite_L.png")]
+
+# some attack frames were repeated to better smooth out the image
+# game is 60 frames per second, single attack ends in 1/6 of a second.  15 - 20 animations make a fluid attack
+# Attack animation for the RIGHT
+attack_ani_R = [pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png"), pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack2_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack2_R.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack3_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack3_R.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack4_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack4_R.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack5_R.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack5_R.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack_R.png")]
+ 
+# Attack animation for the LEFT
+attack_ani_L = [pygame.image.load("resources/img/Attack_Animations/Player_Attack_L.png"), pygame.image.load("resources/img/Attack_Animations/Player_Attack_L.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack2_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack2_L.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack3_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack3_L.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack4_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack4_L.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack5_L.png"),pygame.image.load("resources/img/Attack_Animations/Player_Attack5_L.png"),
+                pygame.image.load("resources/img/Attack_Animations/Player_Attack_L.png")]
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -61,10 +76,11 @@ class Player(pygame.sprite.Sprite):
         self.acc = vec(0,0)
         self.direction = "RIGHT"
         self.jumping = False
-        # standing and running, can add third mode of walking
         self.running = False
-        # current frame of character being displayed
         self.move_frame = 0
+        # Combat, state check and frame check for player
+        self.attacking = False
+        self.attack_frame = 0
 
     def move(self):
         self.acc = vec(0, 0.5)
@@ -104,27 +120,19 @@ class Player(pygame.sprite.Sprite):
                     self.jumping = False
     
     def update(self):
-        # return base frame if at end of movement sequence, resets frame to 0 if it reaches 6, we hve 7 frames starting at index 0
-        # more frames look smoother
         if self.move_frame > 6:
             self.move_frame = 0
             return
 
-        # move character to next frame if conditions are met, animations
-        # checks to make sure characters arent jumping or standing still, only uses animations if character is moving
         if self.jumping == False and self.running == True:
-            # direction player is moving
             if self.vel.x > 0:
-                # image updating from animation dic
                 self.image = run_ani_R[self.move_frame]
-                # sets direction variable
                 self.direction = "RIGHT"
             elif self.vel.x < 0:
                 self.image = run_ani_L[self.move_frame]
                 self.direction = "LEFT"
             self.move_frame += 1
 
-        # returns to the base frame if standing still and incorrect frame is showing
         if abs(self.vel.x) < 0.2 and self.move_frame != 0:
             self.move_frame = 0
             if self.direction == "RIGHT":
@@ -132,8 +140,30 @@ class Player(pygame.sprite.Sprite):
             elif self.direction == "LEFT":
                 self.image = run_ani_L[self.move_frame]
 
+    def correction(self):
+        # Function is used to correct an error
+        # with character position on left attack frames
+        if self.attack_frame == 1:
+            self.pos.x -= 20
+        if self.attack_frame == 10:
+            self.pos.x += 20
+
+
     def attack(self):
-        pass
+        # if dictionary reaches end of images restart at beginning
+        if self.attack_frame > 10:
+            self.attack_frame = 0
+            self.attacking = False
+
+        # check direcction of animation display
+        if self.direction == "RIGHT":
+            self.image = attack_ani_R[self.attack_frame]
+        elif self.direction == "LEFT":
+            self.correction()
+            self.image = attack_ani_L[self.attack_frame]
+
+        # update current attack frame
+        self.attack_frame += 1
 
     def jump(self):
         self.rect.x += 1
@@ -169,10 +199,18 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player.jump()
+
+            if event.key == pygame.K_RETURN:
+                if player.attacking == False:
+                    player.attack()
+                    # player cant attack a second time until the first attack ends
+                    player.attacking = True
     
     background.render()
     ground.render()
     player.update()
+    if player.attacking == True:
+        player.attack()
     player.move()
 
     displaysurface.blit(player.image, player.rect)
