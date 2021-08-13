@@ -14,6 +14,7 @@ FRIC = -0.10
 FPS = 60
 FPS_CLOCK = pygame.time.Clock()
 COUNT = 0
+
 displaysurface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Glenns RPG Fighter Game Practice")
 
@@ -65,15 +66,21 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load("resources/img/Player_Sprite_R.png")
         self.rect = self.image.get_rect()
 
+        # position and direction
         self.vx = 0
         self.pos = vec((340, 240))
         self.vel = vec(0,0)
         self.acc = vec(0,0)
+
+        # movement
         self.direction = "RIGHT"
         self.jumping = False
         self.running = False
         self.move_frame = 0
+        # Combat
         self.attacking = False
+        # cooldown between attacks
+        self.cooldown = False
         self.attack_frame = 0
 
     def move(self):
@@ -98,10 +105,6 @@ class Player(pygame.sprite.Sprite):
         if self.pos.x < 0:
             self.pos.x = WIN_WIDTH
         self.rect.midbottom = self.pos
-
-
-
-
 
     def gravity_check(self):
         hits = pygame.sprite.spritecollide(player, ground_group, False)
@@ -154,6 +157,14 @@ class Player(pygame.sprite.Sprite):
 
         self.attack_frame += 1
 
+    def player_hit(self):
+        hits = pygame.sprite.spritecollide(self, Enemygroup, False)
+        if self.cooldown == False:
+            self.cooldown = True # enable the cooldown
+            pygame.time.set_timer(hit_cooldown, 1000) # resets cooldown in 1 second
+
+            pygame.display.update()
+
     def jump(self):
         self.rect.x += 1
         hits = pygame.sprite.spritecollide(self, ground_group, False)
@@ -167,15 +178,12 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        # load image and retrieve rect of the image size, creates 2 vectors for position and velocity
         self.image = pygame.image.load("resources/img/Enemy.png")
         self.rect = self.image.get_rect()
         self.pos = vec(0,0)
         self.vel = vec(0,0)
-        # more dynamic enemy
-        self.direction = random.randint(0,1) # 0 for Right, 1 for left
-        self.vel.x = random.randint(2,6) / 2 # randomized velocity of enemy
-        # sets inital starting position of enemies
+        self.direction = random.randint(0,1)
+        self.vel.x = random.randint(2,6) / 2
         if self.direction == 0:
             self.pos.x = 0
             self.pos.y = 235
@@ -184,31 +192,50 @@ class Enemy(pygame.sprite.Sprite):
             self.pos.y = 235
     
     def move(self):
-        # cause enemy to change directions upon reaching the end of screen
         if self.pos.x >= (WIN_WIDTH - 20):
             self.direction = 1
         elif self.pos.x <= 0:
             self.direction = 0
 
-        # updates position with values
         if self.direction == 0:
             self.pos.x += self.vel.x
         if self.direction == 1:
             self.pos.x -= self.vel.x
         
-        self.rect.center = self.pos # Updates rec
+        self.rect.center = self.pos
+
+    def update(self):
+        # check for collision with player
+        hits = pygame.sprite.spritecollide(self, Playergroup, False)
+
+        # activates if player is attacking and collision
+        if hits and player.attacking == True:
+            self.kill()
+            print("enemy hit")
+        
+        # if collision with player not attacking, call "hit" function, lets player know they have been hit
+        elif hits and player.attacking == False:
+            player.player_hit()
+            print("you got hit")
 
     def render(self):
-        # display enemy on screen
         displaysurface.blit(self.image, (self.pos.x, self.pos.y))
 
 background = Background()
 ground = Ground()
 ground_group = pygame.sprite.Group()
 ground_group.add(ground)
+
 enemy = Enemy()
+Enemygroup = pygame.sprite.Group()
+Enemygroup.add(enemy)
+
 player = Player()
 Playergroup = pygame.sprite.Group()
+Playergroup.add(player)
+
+# event that we created that can be used in game loop
+hit_cooldown = pygame.USEREVENT + 1
 
 while True:
     player.gravity_check()
@@ -228,17 +255,25 @@ while True:
                 if player.attacking == False:
                     player.attack()
                     player.attacking = True
+
+        if event.type == hit_cooldown:
+            player.cooldown = False
+            pygame.time.set_timer(hit_cooldown, 0)
     
     background.render()
     ground.render()
+    # create and move enemy
+    enemy.render()
+    enemy.move()
+
     player.update()
     if player.attacking == True:
         player.attack()
     player.move()
 
+
     displaysurface.blit(player.image, player.rect)
-    enemy.render()
-    enemy.move()
+
 
     pygame.display.update()
     FPS_CLOCK.tick(FPS)
