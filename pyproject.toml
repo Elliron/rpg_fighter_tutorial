@@ -10,6 +10,8 @@ pygame = "^2.0.1"
 pytest = "^6.2.4"
 black = "^21.7b0"
 coverage = "^5.5"
+tk = "^0.1.0"
+Tcl = "^0.2"
 
 [tool.poetry.dev-dependencies]
 

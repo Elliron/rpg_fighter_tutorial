@@ -28,3 +28,8 @@
 ### Eigth
 - https://coderslegacy.com/python/pygame-rpg-enemy/
 
+### Ninth
+- https://coderslegacy.com/python/pygame-rpg-stage-generation/
+- Mac - brew install python-tk
+- Ubuntu - sudo apt-get install python3-tk
+- Tkinter currently broken on mac
